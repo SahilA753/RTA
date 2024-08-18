@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { PrismaClient } from '@prisma/client';
+import  ThemeProvider  from "@/lib/provider/next-theme-provider";
 
 // Initialize the Prisma Client
 const prisma = new PrismaClient();
@@ -24,7 +25,10 @@ export default function RootLayout({
   console.log(prisma);
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        {children}
+        </ThemeProvider> </body>
     </html>
   );
 }
