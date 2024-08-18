@@ -1,0 +1,204 @@
+enum KeyStatus {
+  expired
+  invalid
+  valid
+  default
+}
+
+enum KeyType {
+  stream_xchacha20
+  secretstream
+  secretbox
+  kdf
+  generichash
+  shorthash
+  auth
+  hmacsha256
+  hmacsha512
+  aead_det
+  aead_ietf
+}
+
+enum FactorStatus {
+  verified
+  unverified
+}
+
+enum FactorType {
+  webauthn
+  totp
+}
+
+enum AalLevel {
+  aal3
+  aal2
+  aal1
+}
+
+enum CodeChallengeMethod {
+  plain
+  s256
+}
+
+enum PricingType {
+  recurring
+  one_time
+}
+
+enum PricingPlanInterval {
+  year
+  month
+  week
+  day
+}
+
+enum SubscriptionStatus {
+  unpaid
+  past_due
+  incomplete_expired
+  incomplete
+  canceled
+  active
+  trialing
+}
+
+enum EqualityOp {
+  in
+  gte
+  gt
+  lte
+  lt
+  neq
+  eq
+}
+
+enum Action {
+  ERROR
+  TRUNCATE
+  DELETE
+  UPDATE
+  INSERT
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Workspaces {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  workspaceOwner String
+  title         String
+  iconId        String
+  data          String?
+  inTrash       String?
+  logo          String?
+  bannerUrl     String?
+
+  Folders       Folders[] // One-to-many relationship with Folders
+  Files         Files[]   // One-to-many relationship with Files
+
+  @@map("workspaces")
+}
+
+model Folders {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  title         String
+  iconId        String
+  data          String?
+  inTrash       String?
+  bannerUrl     String?
+  workspaceId   String    // Foreign key field
+
+  // Relations
+  workspace     Workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
+  Files         Files[]    // One-to-many relationship with Files
+
+  @@map("folders")
+}
+
+model Files {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now())
+  title         String
+  iconId        String
+  data          String?
+  inTrash       String?
+  bannerUrl     String?
+  workspaceId   String    // Foreign key field
+  folderId      String    // Foreign key field
+
+  // Relations
+  workspace     Workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
+  folder        Folders    @relation(fields: [folderId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
+
+  @@map("files")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  fullName      String?
+  avatarUrl     String?
+  email         String?
+  billingAddress Json?
+  updatedAt     DateTime? @db.Timestamptz
+  paymentMethod Json?
+  subscriptions Subscription[]
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  stripeCustomerId String?
+}
+
+model Price {
+  id            String   @id
+  productId     String
+  active        Boolean?
+  description   String?
+  unitAmount    BigInt?
+  currency      String?
+  type          PricingType?
+  interval      PricingPlanInterval?
+  intervalCount Int?
+  trialPeriodDays Int?
+  metadata      Json?
+  product       Product @relation(fields: [productId], references: [id])
+  subscription  Subscription[]
+}
+
+model Product {
+  id          String  @id
+  active      Boolean?
+  name        String?
+  description String?
+  image       String?
+  metadata    Json?
+  prices      Price[]
+}
+
+model Subscription {
+  id                   String   @id
+  userId               String
+  status               SubscriptionStatus?
+  metadata             Json?
+  priceId              String?
+  quantity             Int?
+  cancelAtPeriodEnd    Boolean?
+  created              DateTime @default(now()) @db.Timestamptz
+  currentPeriodStart   DateTime @default(now()) @db.Timestamptz
+  currentPeriodEnd     DateTime @default(now()) @db.Timestamptz
+  endedAt              DateTime? @db.Timestamptz
+  cancelAt             DateTime? @db.Timestamptz
+  canceledAt           DateTime? @db.Timestamptz
+  trialStart           DateTime? @db.Timestamptz
+  trialEnd             DateTime? @db.Timestamptz
+  user                 User     @relation(fields: [userId], references: [id])
+  price                Price?   @relation(fields: [priceId], references: [id])
+}
