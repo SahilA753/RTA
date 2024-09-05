@@ -142,15 +142,19 @@ model Files {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  fullName      String?
-  avatarUrl     String?
-  email         String?
-  billingAddress Json?
-  updatedAt     DateTime? @db.Timestamptz
-  paymentMethod Json?
-  subscriptions Subscription[]
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  verified            Boolean  @default(false)
+  verificationToken   String?
+  avatarUrl           String?
+  fullName            String?
+  pwd                 String?
+  billingAddress      Json?
+  updatedAt           DateTime? @db.Timestamptz
+  paymentMethod       Json?
+  subscriptions       Subscription[]
 }
+
 
 model Customer {
   id              String   @id @default(uuid())

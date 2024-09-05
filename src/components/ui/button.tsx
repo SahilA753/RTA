@@ -20,11 +20,12 @@ const buttonVariants = cva(
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
-        'btn-primary':
-          ' whitespace-nowrap hover:text-primary-foreground dark:bg-gradient-to-t dark:from-[#24232C] dark:to-[#100F18] dark:text-primary-foreground border hover:border-primary dark:border-[#464553] dark:hover:bg-accent hover:bg-primary dark:hover:border-muted-foreground text-lg font-normal',
-        'btn-secondary':
-          'whitespace-nowrap dark:text-primary-foreground text-lg font-normal',
+        link: 'text-white underline-offset-4 hover:underline',
+        "btn-primary":
+          'text-white bg-black hover:bg-gray-800 dark:bg-[#24232C] dark:hover:bg-[#100F18] border border-transparent hover:border-gray-400 dark:border-[#464553] font-normal transition-colors duration-200',
+        "btn-secondary":
+          'text-white bg-transparent hover:bg-transparent border border-transparent hover:border-white dark:hover:border-white font-normal transition-colors duration-200',
+
       },
       size: {
         default: 'h-10 px-4 py-2',
