@@ -1,0 +1,6 @@
+- email verification ui page is not yet done/ redirection
+- sign in (if not verified custom message or alert is not done)
+- forgot password?
+- user is not verified but signup again, currently it shows that the user is made, change that shit.
+
+Central Storage (APP STATE AND bla bla)

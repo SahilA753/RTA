@@ -51,7 +51,13 @@ const LoginPage = () => {
     setIsLoading(false);
 
     if (result?.error) {
-      setSubmitError('Invalid email or password.');
+      console.log(result)
+      // Customize the error message based on the expected error
+      if (result.error.includes('Verification email resent')) {
+        setSubmitError('Not verified. Verification email sent again. Please verify your email.');
+      } else {
+        setSubmitError('Invalid email or password.');
+      }
     } else {
       router.replace('/dashboard'); // Replace with your post-login redirect
     }
@@ -92,7 +98,7 @@ const LoginPage = () => {
             <p className="text-red-500 text-sm text-center">{submitError}</p>
           )}
           <Button type="submit" className="w-full p-6" size="lg" disabled={isLoading}>
-            {isLoading ? <Loader/> : 'Login'}
+            {isLoading ? <Loader /> : 'Login'}
           </Button>
         </form>
         <p className="text-center">

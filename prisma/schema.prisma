@@ -89,24 +89,26 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Workspaces {
+model Workspace {
   id            String    @id @default(uuid())
   createdAt     DateTime  @default(now())
-  workspaceOwner String
+  userId        String
   title         String
   iconId        String
   data          String?
   inTrash       String?
-  logo          String?
+  logo          Bytes?
   bannerUrl     String?
 
-  Folders       Folders[] // One-to-many relationship with Folders
-  Files         Files[]   // One-to-many relationship with Files
+  Folders       Folder[] // One-to-many relationship with Folders
+  Files         File[]   // One-to-many relationship with Files
+  workspaceAccess     WorkspaceAccess[]
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
 
   @@map("workspaces")
 }
 
-model Folders {
+model Folder {
   id            String    @id @default(uuid())
   createdAt     DateTime  @default(now())
   title         String
@@ -117,17 +119,18 @@ model Folders {
   workspaceId   String    // Foreign key field
 
   // Relations
-  workspace     Workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
-  Files         Files[]    // One-to-many relationship with Files
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
+  Files         File[]    // One-to-many relationship with Files
 
   @@map("folders")
 }
 
-model Files {
+model File {
   id            String    @id @default(uuid())
   createdAt     DateTime  @default(now())
   title         String
   iconId        String
+  file          Bytes
   data          String?
   inTrash       String?
   bannerUrl     String?
@@ -135,8 +138,8 @@ model Files {
   folderId      String    // Foreign key field
 
   // Relations
-  workspace     Workspaces @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
-  folder        Folders    @relation(fields: [folderId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
+  folder        Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
 
   @@map("files")
 }
@@ -153,6 +156,8 @@ model User {
   updatedAt           DateTime? @db.Timestamptz
   paymentMethod       Json?
   subscriptions       Subscription[]
+  workspaces          Workspace[]
+  workspaceAccess     WorkspaceAccess[]
 }
 
 
@@ -205,4 +210,24 @@ model Subscription {
   trialEnd             DateTime? @db.Timestamptz
   user                 User     @relation(fields: [userId], references: [id])
   price                Price?   @relation(fields: [priceId], references: [id])
+}
+
+
+enum AccessLevel {
+  private
+  shared
+  collaborated
+}
+
+model WorkspaceAccess {
+  id          String      @id @default(uuid())
+  workspaceId String
+  userId      String
+  accessLevel AccessLevel
+
+  // Relations
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId]) // Ensure a user can't have duplicate access to the same workspace
 }
