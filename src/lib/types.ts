@@ -79,11 +79,9 @@ export const signupSchema = z.object({
     createdAt: string; // DateTime in Prisma maps to string in TypeScript
     title: string;
     iconId: string;
-    file: Uint8Array; // Prisma `Bytes` maps to Uint8Array in TypeScript
     data?: string | null;
     inTrash?: string | null;
     bannerUrl?: string | null;
-    workspaceId: string;
     folderId: string;
   }
   

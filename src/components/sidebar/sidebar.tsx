@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import { twMerge } from 'tailwind-merge';
 import WorkspaceDropdown from './workspace-dropdown';
-import PlanUsage from './plan-usage';
+// import PlanUsage from './plan-usage';
 import NativeNavigation from './native-navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import FoldersDropdownList from './folders-dropdown-list';
@@ -24,6 +24,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
+
   const [user, setUser] = useState<User | null>(null);
   const [workspaceFolders, setWorkspaceFolders] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -37,42 +38,40 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-
         const session = await getSession();
-
+        
         if (!session || !session.user?.email) {
           router.push('/login');
           return;
         }
-
+        
         const userEmail = session.user.email;
-
-        const userdata = await fetch(`../api/getUserByEmail?email=${userEmail}`);
+        
+        const userdata = await fetch(`/api/getUserByEmail?email=${userEmail}`);
         const User: UserResponse = await userdata.json();
-
+        
         if (!userdata.ok || !User.user) {
           setError('Failed to fetch user data');
           return;
         }
-
+        
         setUser(User.user);
         setSubscription(User.user?.subscriptions ? User.user.subscriptions[0] : null);
-
-        // Fetch private, collaborating, and shared workspaces in a single API call
+  
         const workspacesRes = await fetch(`/api/workspaces?userId=${User.user.id}`);
         const { privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces } = await workspacesRes.json();
-        console.log(workspacesRes);
+  
         setPrivateWorkspaces(privateWorkspaces);
         setCollaboratingWorkspaces(collaboratingWorkspaces);
         setSharedWorkspaces(sharedWorkspaces);
-
+  
       } catch (err) {
         setError((err as Error).message || 'An unknown error occurred');
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [params.workspaceId, router]);
 
@@ -92,32 +91,37 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
       )}
     >
       <div>
-        <WorkspaceDropdown
+        { 
+        user ? (<WorkspaceDropdown
           privateWorkspaces={privateWorkspaces}
           sharedWorkspaces={sharedWorkspaces}
           collaboratingWorkspaces={collaboratingWorkspaces}
+          user={user}
           defaultValue={[
             ...privateWorkspaces,
             ...collaboratingWorkspaces,
             ...sharedWorkspaces,
           ].find((workspace) => workspace.id === params.workspaceId)}
-        />
+        />): (
+          <div>Loading...</div>
+        )}
         {/* <PlanUsage
           foldersLength={workspaceFolders.length || 0}
           subscription={subscription}
         /> */}
-        {/* <NativeNavigation myWorkspaceId={params.workspaceId} /> */}
+        <NativeNavigation myWorkspaceId={params.workspaceId} />
         <ScrollArea className="overflow-scroll relative h-[450px]">
         <div
             className="pointer-events-none w-full absolute bottom-0 h-20 bg-gradient-to-t from-background to-transparent z-40"
           />
-          {/* <FoldersDropdownList
-            workspaceFolders={workspaceFolders || []}
+          <FoldersDropdownList
             workspaceId={params.workspaceId}
-          /> */}
+          />
         </ScrollArea>
       </div>
-      {/* <UserCard subscription={subscription} /> */}
+      {user?(<UserCard subscription={subscription} user = {user}/>):(
+          <div>Loading...</div>
+        )}
     </aside>
   );
 };

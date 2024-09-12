@@ -101,7 +101,6 @@ model Workspace {
   bannerUrl     String?
 
   Folders       Folder[] // One-to-many relationship with Folders
-  Files         File[]   // One-to-many relationship with Files
   workspaceAccess     WorkspaceAccess[]
   user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
 
@@ -130,15 +129,12 @@ model File {
   createdAt     DateTime  @default(now())
   title         String
   iconId        String
-  file          Bytes
   data          String?
   inTrash       String?
   bannerUrl     String?
-  workspaceId   String    // Foreign key field
   folderId      String    // Foreign key field
 
   // Relations
-  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade) // Many-to-one relationship with Workspaces
   folder        Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)    // Many-to-one relationship with Folders
 
   @@map("files")

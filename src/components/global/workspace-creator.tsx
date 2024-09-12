@@ -54,7 +54,8 @@ const WorkspaceCreator: React.FC<User_Prop> = ({
   };
 
   const addCollaborators = async (collaborators: User[], workspaceId: string) => {
-    const response = await fetch('/api/collaborator', {
+    console.log(collaborators);
+    const response = await fetch('/api/collaborators', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ collaborators, workspaceId }),
@@ -86,6 +87,7 @@ const WorkspaceCreator: React.FC<User_Prop> = ({
         toast({ title: 'Success', description: 'Created the workspace' });
         router.refresh();
       } else if (permissions === 'shared') {
+        console.log("HIIIIIIII")
         await createWorkspace(newWorkspace);
         await addCollaborators(collaborators, uuid);
         toast({ title: 'Success', description: 'Created the workspace with collaborators' });
@@ -153,6 +155,7 @@ const WorkspaceCreator: React.FC<User_Prop> = ({
           <CollaboratorSearch
             existingCollaborators={collaborators}
             getCollaborator={addCollaborator}
+            usser = {user}
           >
             <Button type="button" className="text-sm mt-4">
               <Plus /> Add Collaborators

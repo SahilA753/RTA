@@ -1,31 +1,30 @@
+'use client'
 import React, { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import CypressProfileIcon from '../icons/cypressProfileIcon';
 import ModeToggle from '../global/mode-toggle';
-import { LogOut } from 'lucide-react';
-import LogoutButton from '../global/logout-button';
-import { Subscription } from '@/lib/types';
+import { Subscription, User } from '@/lib/types';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { Button } from '../ui/button';
+import { FaSignOutAlt } from 'react-icons/fa'; // Import the logout icon
 
 interface UserCardProps {
+  user : User|null;
   subscription: Subscription | null;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ subscription }) => {
-  const [profile, setProfile] = useState<any | null>(null);
+const UserCard: React.FC<UserCardProps> = ({ subscription, user }) => {
+  const router = useRouter();
+  const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/user'); // Use a generic backend call
-        const userData = await response.json();
-        
-        if (!response.ok || !userData) {
-          throw new Error('Failed to fetch user data');
-        }
-
-        setProfile(userData);
+        setProfile(user);
       } catch (err) {
         setError('Error fetching user data');
       } finally {
@@ -36,13 +35,22 @@ const UserCard: React.FC<UserCardProps> = ({ subscription }) => {
     fetchUserData();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const logout = async () => {
+    await signOut({
+      redirect: false,
+    });
+    router.push('/login');
+  };
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  console.log(user);
+
+  // if (loading) {
+  //   return <div>Loading...</div>;
+  // }
+
+  // if (error) {
+  //   return <div>Error: {error}</div>;
+  // }
 
   return (
     <article
@@ -67,9 +75,11 @@ const UserCard: React.FC<UserCardProps> = ({ subscription }) => {
         </div>
       </aside>
       <div className="flex items-center justify-center">
-        <LogoutButton>
-          <LogOut />
-        </LogoutButton>
+
+<Button variant="ghost" size="icon" className="p-0" onClick={logout}>
+  <FaSignOutAlt />
+</Button>
+
         <ModeToggle />
       </div>
     </article>

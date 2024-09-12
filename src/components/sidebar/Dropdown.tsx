@@ -1,7 +1,6 @@
 'use client';
-import { useAppState } from '@/lib/providers/state-provider';
 import { useRouter } from 'next/navigation';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect,useState, useMemo } from 'react';
 import {
   AccordionContent,
   AccordionItem,
@@ -13,236 +12,177 @@ import { useToast } from '../ui/use-toast';
 import TooltipComponent from '../global/tooltip-component';
 import { PlusIcon, Trash } from 'lucide-react';
 import { v4 } from 'uuid';
-import { useSession } from '@/lib/providers/session-provider'; // Assuming you have a session provider
+import { File } from '@/lib/types';
 
 interface DropdownProps {
   title: string;
-  id: string;
+  folderId: string|null;
   listType: 'folder' | 'file';
   iconId: string;
   children?: React.ReactNode;
   disabled?: boolean;
+  workspaceId: string;
+  id:string;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
   title,
-  id,
+  folderId,
   listType,
   iconId,
   children,
   disabled,
-  ...props
+  workspaceId,
+  id,
 }) => {
   const { toast } = useToast();
-  const { user } = useSession(); // Use session provider to get the current user
-  const { state, dispatch, workspaceId, folderId } = useAppState();
   const [isEditing, setIsEditing] = useState(false);
+  const [folderTitle, setFolderTitle] = useState(title);
+  const [fileTitle, setFileTitle] = useState(title);
+  const [files,setfiles] = useState<File[]>([]);
+  const [emote,setemote] = useState(iconId);
   const router = useRouter();
 
-  const folderTitle: string | undefined = useMemo(() => {
-    if (listType === 'folder') {
-      const stateTitle = state.workspaces
-        .find((workspace) => workspace.id === workspaceId)
-        ?.folders.find((folder) => folder.id === id)?.title;
-      if (title === stateTitle || !stateTitle) return title;
-      return stateTitle;
-    }
-  }, [state, listType, workspaceId, id, title]);
-
-  const fileTitle: string | undefined = useMemo(() => {
-    if (listType === 'file') {
-      const fileAndFolderId = id.split('folder');
-      const stateTitle = state.workspaces
-        .find((workspace) => workspace.id === workspaceId)
-        ?.folders.find((folder) => folder.id === fileAndFolderId[0])
-        ?.files.find((file) => file.id === fileAndFolderId[1])?.title;
-      if (title === stateTitle || !stateTitle) return title;
-      return stateTitle;
-    }
-  }, [state, listType, workspaceId, id, title]);
-
-  const navigatePage = (accordionId: string, type: string) => {
-    if (type === 'folder') {
-      router.push(`/dashboard/${workspaceId}/${accordionId}`);
-    }
-    if (type === 'file') {
-      router.push(
-        `/dashboard/${workspaceId}/${folderId}/${accordionId.split('folder')[1]}`
-      );
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch(`/api/files?id=${encodeURIComponent(id)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch folders');
+      }
+      const fetchedFiles: File[] = await response.json();
+      setfiles(fetchedFiles);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'Could not load folders',
+      });
     }
   };
 
+    useEffect(() => {
+      if (listType === 'folder') {
+        fetchFiles();
+      }
+    }, [id]); 
+
+    console.log(files)
   const handleDoubleClick = () => {
     setIsEditing(true);
   };
 
   const handleBlur = async () => {
-    if (!isEditing) return;
     setIsEditing(false);
-    const fId = id.split('folder');
-    if (fId?.length === 1) {
-      if (!folderTitle) return;
-      toast({
-        title: 'Success',
-        description: 'Folder title changed.',
-      });
-      // Replace with your generic API call
-      const response = await fetch('/api/update-folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: fId[0], title: folderTitle }),
-      });
-      if (!response.ok) {
+    if (listType === 'folder' && folderTitle !== title) {
+      try {
+
+        await fetch(`/api/folders`, {
+          method: 'POST',
+          body: JSON.stringify({id:id, title: folderTitle, iconId:iconId, inTrash:null, }),
+        });
+        toast({
+          title: 'Success',
+          description: 'Folder title updated.',
+        });
+      } catch {
         toast({
           title: 'Error',
           variant: 'destructive',
-          description: 'Could not update the folder title',
+          description: 'Failed to update folder title.',
         });
       }
     }
 
-    if (fId.length === 2 && fId[1]) {
-      if (!fileTitle) return;
-      const response = await fetch('/api/update-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: fId[1], title: fileTitle }),
-      });
-      if (!response.ok) {
+    if (listType === 'file' && fileTitle !== title) {
+      try {
+        await fetch(`/api/files`, {
+          method: 'POST',
+          body: JSON.stringify({id:id, title: fileTitle }),
+        });
+        toast({
+          title: 'Success',
+          description: 'File title updated.',
+        });
+      } catch {
         toast({
           title: 'Error',
           variant: 'destructive',
-          description: 'Could not update the file title',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'File title changed.',
+          description: 'Failed to update file title.',
         });
       }
     }
   };
 
   const onChangeEmoji = async (selectedEmoji: string) => {
-    if (!workspaceId) return;
-    if (listType === 'folder') {
-      dispatch({
-        type: 'UPDATE_FOLDER',
-        payload: {
-          workspaceId,
-          folderId: id,
-          folder: { iconId: selectedEmoji },
-        },
-      });
-      const response = await fetch('/api/update-folder', {
+    try {
+      setemote(selectedEmoji)
+      await fetch(`/api/${listType==="file"?"files":"folders"}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, iconId: selectedEmoji }),
+        body: JSON.stringify({id:id, iconId: selectedEmoji }),
       });
-      if (!response.ok) {
-        toast({
-          title: 'Error',
-          variant: 'destructive',
-          description: 'Could not update the emoji for this folder',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Update emoji for the folder',
-        });
-      }
-    }
-  };
-
-  const folderTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!workspaceId) return;
-    const fid = id.split('folder');
-    if (fid.length === 1) {
-      dispatch({
-        type: 'UPDATE_FOLDER',
-        payload: {
-          folder: { title: e.target.value },
-          folderId: fid[0],
-          workspaceId,
-        },
+      toast({
+        title: 'Success',
+        description: 'Emoji updated for folder.',
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'Failed to update emoji.',
       });
     }
   };
 
-  const fileTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!workspaceId || !folderId) return;
-    const fid = id.split('folder');
-    if (fid.length === 2 && fid[1]) {
-      dispatch({
-        type: 'UPDATE_FILE',
-        payload: {
-          file: { title: e.target.value },
-          folderId,
-          workspaceId,
-          fileId: fid[1],
-        },
+  const addNewFile = async () => {
+    const newFile = {
+      folderId: id,
+      title: 'Untitled',
+      iconId: '📄',
+      id: v4(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setfiles((files) => [...files, newFile]);
+
+    try {
+      await fetch(`/api/files`, {
+        method: 'POST',
+        body: JSON.stringify(newFile),
+      });
+      toast({
+        title: 'Success',
+        description: 'New file created.',
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: 'Failed to create file.',
       });
     }
   };
 
   const moveToTrash = async () => {
-    if (!user?.id || !workspaceId) return;
-    const pathId = id.split('folder');
-    if (listType === 'folder') {
-      dispatch({
-        type: 'UPDATE_FOLDER',
-        payload: {
-          folder: { inTrash: `Deleted by ${user?.id}` },
-          folderId: pathId[0],
-          workspaceId,
-        },
-      });
-      const response = await fetch('/api/update-folder', {
+    try {
+      await fetch(`/api/${listType}s`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: pathId[0], inTrash: `Deleted by ${user?.id}` }),
+        body: JSON.stringify({id:id,inTrash: "true" }),
       });
-      if (!response.ok) {
-        toast({
-          title: 'Error',
-          variant: 'destructive',
-          description: 'Could not move the folder to trash',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Moved folder to trash',
-        });
-      }
-    }
-
-    if (listType === 'file') {
-      dispatch({
-        type: 'UPDATE_FILE',
-        payload: {
-          file: { inTrash: `Deleted by ${user?.id}` },
-          folderId: pathId[0],
-          workspaceId,
-          fileId: pathId[1],
-        },
+      toast({
+        title: 'Success',
+        description: `Moved ${listType} to trash.`,
       });
-      const response = await fetch('/api/update-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: pathId[1], inTrash: `Deleted by ${user?.id}` }),
+    } catch {
+      toast({
+        title: 'Error',
+        variant: 'destructive',
+        description: `Failed to move ${listType} to trash.`,
       });
-      if (!response.ok) {
-        toast({
-          title: 'Error',
-          variant: 'destructive',
-          description: 'Could not move the file to trash',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Moved file to trash',
-        });
-      }
     }
   };
 
@@ -276,19 +216,83 @@ const Dropdown: React.FC<DropdownProps> = ({
     [isFolder]
   );
 
-  const addNewFile = async () => {
-    if (!workspaceId) return;
-    const newFile: File = {
-      folderId: id,
-      data: null,
-      createdAt: new Date().toISOString(),
-      inTrash: null,
-      title: 'Untitled',
-      iconId: '📄',
-      id: v4(),
-      workspaceId,
-      bannerUrl: '',
-    };
-    dispatch({
-      type: 'ADD_FILE',
-      payload: { file: newFile
+  return (
+    <AccordionItem
+      value={id}
+      className={listStyles}
+      onClick={(e) => {
+        e.stopPropagation();
+        if(listType=='folder')
+        router.push(`/dashboard/${workspaceId}/${id}`);
+        else
+        router.push(`/dashboard/${workspaceId}/${folderId}/${id}`);
+      }}
+    >
+      <AccordionTrigger className="hover:no-underline p-2 dark:text-muted-foreground text-sm">
+        <div className={groupIdentifies}>
+          <div className="flex gap-4 items-center justify-center overflow-hidden">
+            <div className="relative">
+              <EmojiPicker getValue={onChangeEmoji}>{emote}</EmojiPicker>
+            </div>
+            <input
+              type="text"
+              value={listType === 'folder' ? folderTitle : fileTitle}
+              className={clsx(
+                'outline-none overflow-hidden w-[140px] text-Neutrals/neutrals-7',
+                {
+                  'bg-muted cursor-text': isEditing,
+                  'bg-transparent cursor-pointer': !isEditing,
+                }
+              )}
+              readOnly={!isEditing}
+              onDoubleClick={handleDoubleClick}
+              onBlur={handleBlur}
+              onChange={(e) =>
+                listType === 'folder'
+                  ? setFolderTitle(e.target.value)
+                  : setFileTitle(e.target.value)
+              }
+            />
+          </div>
+          <div className={hoverStyles}>
+            <TooltipComponent message={listType==='file'?'Delete File':'Delete Folder'}>
+              <Trash
+                onClick={moveToTrash}
+                size={15}
+                className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+              />
+            </TooltipComponent>
+            {listType === 'folder' && !isEditing && (
+              <TooltipComponent message="Add File">
+                <PlusIcon
+                  onClick={addNewFile}
+                  size={15}
+                  className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+                />
+              </TooltipComponent>
+            )}
+          </div>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent>
+           
+            {files
+            .filter((file) => !file.inTrash)
+              .map((file) => (
+                <Dropdown
+                  key={file.id}
+                  title={file.title}
+                  listType="file"
+                  id={file.id}
+                  iconId={file.iconId}
+                  workspaceId={workspaceId}
+                  folderId={id}
+                />
+              ))
+          }
+      </AccordionContent>
+    </AccordionItem>
+  );
+};
+
+export default Dropdown;

@@ -20,12 +20,14 @@ interface CollaboratorSearchProps {
   existingCollaborators: User[] | [];
   getCollaborator: (collaborator: User) => void;
   children: React.ReactNode;
+  usser : User;
 }
 
 const CollaboratorSearch: React.FC<CollaboratorSearchProps> = ({
   children,
   existingCollaborators,
   getCollaborator,
+  usser,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [searchResults, setSearchResults] = useState<User[] | []>([]);
@@ -34,9 +36,7 @@ const CollaboratorSearch: React.FC<CollaboratorSearchProps> = ({
   useEffect(() => {
     // Fetch the current user from your generic backend API
     const fetchUser = async () => {
-      const response = await fetch('/api/user');
-      const data = await response.json();
-      setUser(data);
+      setUser(usser);
     };
     fetchUser();
 
@@ -49,13 +49,18 @@ const CollaboratorSearch: React.FC<CollaboratorSearchProps> = ({
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(async () => {
-      // Fetch users from your generic backend API based on search input
-      const res = await fetch(`/api/search-users?query=${e.target.value}`);
+      const res = await fetch('/api/search-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: e.target.value }),
+      });
+
       const data = await res.json();
-      setSearchResults(data);
+      setSearchResults(data.users || []);
     }, 450);
   };
 
+  
   const addCollaborator = (user: User) => {
     getCollaborator(user);
   };

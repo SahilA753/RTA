@@ -1,83 +1,78 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import TooltipComponent from '../global/tooltip-component';
+// import TooltipComponent from '../global/tooltip-component';
 import { PlusIcon } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { useAppState } from '@/lib/providers/state-provider';
 import { Folder } from '@/lib/types'; // Replace with your generic backend types
-import { createFolder } from '@/lib/api/folder'; // Replace with your API call
 import { useToast } from '../ui/use-toast';
 import { Accordion } from '../ui/accordion';
-import Dropdown
-import { useSubscriptionModal } from '@/lib/providers/subscription-modal-provider';
-import { getSessionUserId } from '@/lib/auth'; // Replace with your session handling function
+import TooltipComponent from '../global/tooltip-component';
+import Dropdown from './Dropdown';
+// import { useSubscriptionModal } from '@/lib/providers/subscription-modal-provider';
 
 interface FoldersDropdownListProps {
-  workspaceFolders: Folder[];
   workspaceId: string;
 }
 
 const FoldersDropdownList: React.FC<FoldersDropdownListProps> = ({
-  workspaceFolders,
   workspaceId,
 }) => {
-  const { state, dispatch, folderId } = useAppState();
-  const { open, setOpen } = useSubscriptionModal();
+  // const { open, setOpen } = useSubscriptionModal();
   const { toast } = useToast();
-  const [folders, setFolders] = useState(workspaceFolders);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<Folder[]>([]);
 
   useEffect(() => {
-    // Fetch user ID from session
-    getSessionUserId().then(id => setUserId(id));
-
-    // Initialize folders state
-    if (workspaceFolders.length > 0) {
-      dispatch({
-        type: 'SET_FOLDERS',
-        payload: {
-          workspaceId,
-          folders: workspaceFolders.map((folder) => ({
-            ...folder,
-            files: state.workspaces
-              .find((workspace) => workspace.id === workspaceId)
-              ?.folders.find((f) => f.id === folder.id)?.files || [],
-          })),
-        },
-      });
-    }
-  }, [workspaceFolders, workspaceId, state, dispatch]);
-
-  useEffect(() => {
-    setFolders(
-      state.workspaces.find((workspace) => workspace.id === workspaceId)
-        ?.folders || []
-    );
-  }, [state, workspaceId]);
-
+    const fetchWorkspaceFolders = async () => {
+      try {
+        const response = await fetch(`/api/folders?workspaceId=${encodeURIComponent(workspaceId)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch folders');
+        }
+        const fetchedFolders: Folder[] = await response.json();
+        setFolders(fetchedFolders);
+      } catch (error) {
+        toast({
+          title: 'Error',
+          variant: 'destructive',
+          description: 'Could not load folders',
+        });
+      }
+    };
+  
+    fetchWorkspaceFolders();
+  }, [workspaceId, toast]);
   const addFolderHandler = async () => {
-    if (folders.length >= 3 && !userId) {
-      setOpen(true);
-      return;
-    }
-    const newFolder: Folder = {
-      data: null,
+
+    const newFolder = {
       id: uuidv4(),
       createdAt: new Date().toISOString(),
       title: 'Untitled',
       iconId: '📄',
+      data: null,
       inTrash: null,
-      workspaceId,
       bannerUrl: '',
+      workspaceId:workspaceId,
+      // files: [],
     };
 
-    dispatch({
-      type: 'ADD_FOLDER',
-      payload: { workspaceId, folder: { ...newFolder, files: [] } },
-    });
+    setFolders((prevFolders) => [...prevFolders, { ...newFolder, files: [] }]);
 
     try {
-      await createFolder(newFolder);
+      const response = await fetch('/api/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newFolder),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create folder');
+      }
       toast({
         title: 'Success',
         description: 'Created folder.',
@@ -88,6 +83,7 @@ const FoldersDropdownList: React.FC<FoldersDropdownListProps> = ({
         variant: 'destructive',
         description: 'Could not create the folder',
       });
+      setFolders((prevFolders) => prevFolders.filter((folder) => folder.id !== newFolder.id));
     }
   };
 
@@ -99,17 +95,17 @@ const FoldersDropdownList: React.FC<FoldersDropdownListProps> = ({
         <span className="text-Neutrals-8 font-bold text-xs">
           FOLDERS
         </span>
-        <TooltipComponent message="Create Folder">
+        <TooltipComponent message='Create Folder'>
           <PlusIcon
             onClick={addFolderHandler}
             size={16}
             className="group-hover/title:inline-block hidden cursor-pointer hover:dark:text-white"
           />
-        </TooltipComponent>
+          </TooltipComponent>
+        
       </div>
       <Accordion
         type="multiple"
-        defaultValue={[folderId || '']}
         className="pb-20"
       >
         {folders
@@ -121,6 +117,8 @@ const FoldersDropdownList: React.FC<FoldersDropdownListProps> = ({
               listType="folder"
               id={folder.id}
               iconId={folder.iconId}
+              workspaceId = {workspaceId}
+              folderId={null}
             />
           ))}
       </Accordion>

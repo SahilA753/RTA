@@ -23,6 +23,8 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({
   user,
   defaultValue,
 }) => {
+
+  console.log(user,"WORKSPACEDROPDOWN")
   const [selectedOption, setSelectedOption] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -52,7 +54,7 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({
       </div>
       {isOpen && (
         <div
-          className="origin-top-right absolute w-full rounded-md shadow-md z-50 h-[190px] bg-black/10 backdrop-blur-lg group overflow-scroll border-[1px] border-muted"
+          className="origin-top-right absolute w-full rounded-md shadow-md z-50 h-[190px] bg-black/10 backdrop-blur-lg group overflow-scroll border-[0.1px] border-muted"
         >
           <div className="rounded-md flex flex-col">
             <div className="!p-2">
