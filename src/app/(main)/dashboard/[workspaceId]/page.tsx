@@ -1,26 +1,47 @@
-export const dynamic = 'force-dynamic';
+'use client'
 import QuillEditor from '@/components/quill-editor/quill-editor';
-// import { redirect } from 'next/navigation';
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter for redirection
+import { TotalContext } from '@/lib/provider/Central_Storage_Provider';
+import { Workspace } from '@/lib/types';
 
-const Workspace = async ({ params }: { params: { workspaceId: string } }) => {
-  const res = await fetch(`http://localhost:3000/api/getWorkspacebyId?workspaceId=${params.workspaceId}`);
-  
-  if (!res.ok) {
-    throw new Error(`Error: ${res.statusText}`);
+const Workspace_Component = ({ params }: { params: { workspaceId: string } }) => {
+  const { workspaces } = useContext(TotalContext);
+  const [workspaceData, setWorkspaceData] = useState<Workspace | null>(null);
+  const router = useRouter(); // Initialize router
+
+  useEffect(() => {
+    // Ensure workspaces is defined and is an array
+    if (Array.isArray(workspaces)) {
+      const data = workspaces.find((workspace) => workspace.id === params.workspaceId);
+      if (data) {
+        setWorkspaceData(data); // Set the workspace data if found
+      } else {
+        // Handle case where workspace isn't found in the existing context
+        console.warn(`Workspace with ID ${params.workspaceId} not found.`);
+        // Optionally navigate to a different route or show a message
+        router.push('/dashboard'); // Redirect to dashboard
+      }
+    } else {
+      // If workspaces is not available, navigate back to the dashboard
+      console.warn("Workspaces are not available in context.");
+      router.push('/dashboard'); // Redirect to dashboard
+    }
+  }, [params.workspaceId, workspaces, router]);
+
+  // Check if workspaceData is available
+  if (!workspaceData) {
+    return <div>Loading workspace data...</div>; // Loading state or redirect handled above
   }
 
-  const data = await res.json();
-
-  console.log("quill",data)
   return (
     <div className="relative">
       <QuillEditor
         dirType="workspace"
-        dirDetails={data || {}}
+        dirDetails={workspaceData}
       />
     </div>
   );
 };
 
-export default Workspace;
+export default Workspace_Component;

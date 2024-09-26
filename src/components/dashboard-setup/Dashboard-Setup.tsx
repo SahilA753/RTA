@@ -10,7 +10,8 @@ import { useToast } from '../ui/use-toast';
 import { useRouter } from 'next/navigation';
 import { User,Workspace,Subscription } from '@/lib/types';
 import { CreateWorkspaceFormSchema } from '@/lib/types';
-
+import { useContext } from 'react';
+import { TotalContext} from '@/lib/provider/Central_Storage_Provider';
 
 interface DashboardSetupProps {
   user: User;
@@ -20,12 +21,10 @@ interface DashboardSetupProps {
 
 const DashboardSetup: React.FC<DashboardSetupProps> = ({ user, subscription, workspace }) => {
 
-
   const { toast } = useToast();
   const router = useRouter();
-
+  const {workspaces, setWorkspaces } = useContext(TotalContext);
   const [selectedEmoji, setSelectedEmoji] = useState('💼');
-
   const [formData, setFormData] = useState<{
     workspaceName: string;
     logo: string | null;
@@ -78,12 +77,8 @@ const DashboardSetup: React.FC<DashboardSetupProps> = ({ user, subscription, wor
       }));
     }
   
-    console.log(formData.logo);
+    // console.log(formData.logo);
   };
-  
-  
-  
-  
 
   const validateForm = () => {
     const result = CreateWorkspaceFormSchema.safeParse(formData);
@@ -139,7 +134,8 @@ const DashboardSetup: React.FC<DashboardSetupProps> = ({ user, subscription, wor
         files: [],   // Assuming File is defined elsewhere
         user: user 
       };
-  
+
+      setWorkspaces((prevWorkspaces) => (prevWorkspaces ? [...prevWorkspaces, newWorkspace] : [newWorkspace]));
       await createWorkspace(newWorkspace);
       toast({ title: 'Workspace Created', description: `${newWorkspace.title} has been created successfully.` });
       router.replace(`/dashboard/${workspaceUUID}`);

@@ -1,6 +1,6 @@
 'use client';
 import { File, Folder, Workspace } from '@/lib/types';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState , useContext} from 'react';
 import 'quill/dist/quill.snow.css';
 import { Button } from '../ui/button';
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,6 +14,8 @@ import { XCircleIcon } from 'lucide-react';
 import { getSession } from 'next-auth/react';
 import axios from 'axios';
 import { useSocket } from '@/lib/provider/socket-provider';
+import { TotalContext } from '@/lib/provider/Central_Storage_Provider';
+
 
 interface QuillEditorProps {
   dirDetails: File | Folder | Workspace;
@@ -38,8 +40,8 @@ const TOOLBAR_OPTIONS = [
 
 const QuillEditor: React.FC<QuillEditorProps> = ({ dirDetails, dirType }) => {
   // console.log("dir",dirDetails,dirType);
+  const { user, setUser, subscription, setSubscription, workspaces, setWorkspaces } = useContext(TotalContext);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const [user, setUser] = useState();
   const router = useRouter();
   const { socket, isConnected } = useSocket();
   const pathname = usePathname();
@@ -92,11 +94,6 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ dirDetails, dirType }) => {
         router.push('/login');
         return;
       }
-
-      const userEmail = session.user.email;
-      const userdata = await fetch(`/api/getUserByEmail?email=${userEmail}`);
-      const userr = await(userdata.json())
-      setUser(userr);
     };
     fetchUserAndDirectoryDetails();
   }, [dirType, dirDetails, router]);
@@ -110,10 +107,9 @@ const QuillEditor: React.FC<QuillEditorProps> = ({ dirDetails, dirType }) => {
         const segments = pathname.split('/').filter((val) => val !== 'dashboard' && val);
 
         if (segments.length === 0) return;
-
-        const workspaceResponse = await axios.get(`/api/getWorkspacebyId?workspaceId=${segments[0]}`);
-        const workspaceDetails = workspaceResponse.data;
-
+        console.log("WORKSPACEESSSS",workspaces)
+        const workspaceDetails = workspaces?.find((ws) => ws.id === segments[0]);
+        console.log("WORKSPACE DETAILSSSS", workspaceDetails)
         const workspaceBreadCrumb = workspaceDetails ? `${workspaceDetails.iconId} ${workspaceDetails.title}` : '';
 
         if (segments.length === 1) {

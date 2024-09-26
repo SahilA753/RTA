@@ -6,6 +6,8 @@ import  ThemeProvider  from "@/lib/provider/next-theme-provider";
 import { twMerge } from "tailwind-merge";
 import { Session } from "@/lib/provider/session-provider";
 import { SocketProvider } from "@/lib/provider/socket-provider";
+import { CentralStorage } from "@/lib/provider/Central_Storage_Provider";
+
 
 const inter = DM_Sans({ subsets: ["latin"] });
 
@@ -24,11 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={twMerge('bg-background',inter.className)}>
        <Session>
+        <CentralStorage>
        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <SocketProvider>
         {children}
         </SocketProvider>
         </ThemeProvider> 
+        </CentralStorage>
         </Session></body>
     </html>
   );

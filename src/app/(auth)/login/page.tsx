@@ -18,6 +18,7 @@ const LoginPage = () => {
   const [submitError, setSubmitError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSubmitError('');
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -41,17 +42,16 @@ const LoginPage = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-
+    
     const result = await signIn('credentials', {
       redirect: false,
       email: formData.email,
       password: formData.password,
     });
-
+    
     setIsLoading(false);
 
     if (result?.error) {
-      console.log(result)
       // Customize the error message based on the expected error
       if (result.error.includes('Verification email resent')) {
         setSubmitError('Not verified. Verification email sent again. Please verify your email.');

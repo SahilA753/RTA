@@ -1,6 +1,6 @@
 
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import { twMerge } from 'tailwind-merge';
@@ -11,6 +11,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import FoldersDropdownList from './folders-dropdown-list';
 import UserCard from './user-card';
 import { User, Workspace, Subscription } from '@/lib/types';
+import { TotalContext } from '@/lib/provider/Central_Storage_Provider';
+
 
 interface UserResponse {
   user: User;
@@ -24,16 +26,16 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
-
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, subscription, setSubscription, workspaces, setWorkspaces } = useContext(TotalContext);
   const [workspaceFolders, setWorkspaceFolders] = useState<any[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [privateWorkspaces, setPrivateWorkspaces] = useState<Workspace[]>([]);
   const [collaboratingWorkspaces, setCollaboratingWorkspaces] = useState<Workspace[]>([]);
   const [sharedWorkspaces, setSharedWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  if(!user) return;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,21 +46,9 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
           router.push('/login');
           return;
         }
-        
-        const userEmail = session.user.email;
-        
-        const userdata = await fetch(`/api/getUserByEmail?email=${userEmail}`);
-        const User: UserResponse = await userdata.json();
-        
-        if (!userdata.ok || !User.user) {
-          setError('Failed to fetch user data');
-          return;
-        }
-        
-        setUser(User.user);
-        setSubscription(User.user?.subscriptions ? User.user.subscriptions[0] : null);
+      
   
-        const workspacesRes = await fetch(`/api/workspaces?userId=${User.user.id}`);
+        const workspacesRes = await fetch(`/api/workspaces?userId=${user?.id}`);
         const { privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces } = await workspacesRes.json();
   
         setPrivateWorkspaces(privateWorkspaces);

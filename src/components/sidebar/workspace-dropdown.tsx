@@ -6,8 +6,6 @@ import WorkspaceCreator from '../global/workspace-creator';
 import { Workspace } from '@/lib/types';
 import { User } from '@/lib/types';
 
-
-
 interface WorkspaceDropdownProps {
   privateWorkspaces: Workspace[] | [];
   sharedWorkspaces: Workspace[] | [];
@@ -24,7 +22,6 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({
   defaultValue,
 }) => {
 
-  // console.log(user,"WORKSPACEDROPDOWN")
   const [selectedOption, setSelectedOption] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
 

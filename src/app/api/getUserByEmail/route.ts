@@ -12,24 +12,32 @@ export async function GET(req: Request) {
 
   try {
     const user = await db.user.findUnique({
-        where: {
-          email: email,
-        },
-        select: {
-          id: true,
-          email: true,
-          verified: true,
-          verificationToken: true,
-          avatarUrl: true,
-          fullName: true,
-          billingAddress: true,
-          updatedAt: true,
-          paymentMethod: true,
-          subscriptions: true,  // Include related subscriptions
-          workspaces: true,      // Include related workspaces
-          pwd: false,            // Exclude the pwd field
-        },
-      });
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        email: true,
+        verified: true,
+        verificationToken: true,
+        avatarUrl: true,
+        fullName: true,
+        billingAddress: true,
+        updatedAt: true,
+        paymentMethod: true,
+        subscriptions: true,  // Include related subscriptions
+        workspaces: true,      // Include related workspaces
+        pwd: true,             // Include pwd field
+      },
+    });
+    
+    // Set the pwd field to null
+    if (user) {
+      user.pwd = null; // Change pwd to null
+    }
+    
+    // Now `user` will contain all fields with pwd set to null
+    
       
 
     if (!user) {
