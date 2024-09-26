@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const folderId = url.searchParams.get('id');
-    console.log(folderId)
+    // console.log(folderId)
     if (!folderId) {
       return NextResponse.json({ error: 'Missing folderId' }, { status: 400 });
     }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const newFile = body;
 
-    console.log(newFile)
+    // console.log(newFile)
 
     // const newFile = FileSchema.parse(body);
     

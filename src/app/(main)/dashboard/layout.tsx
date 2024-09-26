@@ -3,7 +3,7 @@ import React from 'react';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main>
+    <main className="flex over-hidden h-screen">
       {children}
     </main>
   );

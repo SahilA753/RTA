@@ -42,7 +42,7 @@ const UserCard: React.FC<UserCardProps> = ({ subscription, user }) => {
     router.push('/login');
   };
 
-  console.log(user);
+  // console.log(user);
 
   // if (loading) {
   //   return <div>Loading...</div>;

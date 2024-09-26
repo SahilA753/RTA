@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const workspaceId = url.searchParams.get('workspaceId');
-    console.log(workspaceId);
+    // console.log(workspaceId);
     if (!workspaceId) {
       return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });
     }
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const newFolder = body;
     // const newFolder = FolderSchema.parse(body);
-    console.log(newFolder)
+    // console.log(newFolder)
     if (newFolder.id) {
       // Check if the folder exists
       const existingFolder = await db.folder.findUnique({
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         },
       });
 
-      console.log(alpha)
+      // console.log(alpha)
 
       return NextResponse.json({ message: 'Folder created successfully' }, { status: 201 });
     }

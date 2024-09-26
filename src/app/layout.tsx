@@ -5,10 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import  ThemeProvider  from "@/lib/provider/next-theme-provider";
 import { twMerge } from "tailwind-merge";
 import { Session } from "@/lib/provider/session-provider";
-// Initialize the Prisma Client
-const prisma = new PrismaClient();
-
-
+import { SocketProvider } from "@/lib/provider/socket-provider";
 
 const inter = DM_Sans({ subsets: ["latin"] });
 
@@ -23,13 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  console.log(prisma);
   return (
     <html lang="en">
       <body className={twMerge('bg-background',inter.className)}>
        <Session>
        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <SocketProvider>
         {children}
+        </SocketProvider>
         </ThemeProvider> 
         </Session></body>
     </html>

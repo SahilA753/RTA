@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { Socket, Server as NetServer } from 'net';
+import { Server as SocketIOServer } from 'socket.io';
+import { NextApiResponse } from 'next';
+
 
 export const loginSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -85,3 +89,10 @@ export const signupSchema = z.object({
     folderId: string;
   }
   
+  export type NextApiResponseServerIo = NextApiResponse & {
+    socket: Socket & {
+      server: NetServer & {
+        io: SocketIOServer;
+      };
+    };
+  };

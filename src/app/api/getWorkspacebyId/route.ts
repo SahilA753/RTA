@@ -6,7 +6,7 @@ import { z } from 'zod';
 // Define validation schema using Zod
 const WorkspaceSchema = z.object({
   id: z.string().uuid(),
-  createdAt: z.string().datetime(), // Use z.string().datetime() to match ISO format
+  createdAt: z.date(), // Use z.string().datetime() to match ISO format
   userId: z.string(),
   title: z.string(),
   iconId: z.string(),
@@ -25,6 +25,8 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get('workspaceId');
+
+    // console.log("WORKSPACEID",workspaceId)
 
     if (!workspaceId) {
       return NextResponse.json({ error: 'Missing workspaceId' }, { status: 400 });

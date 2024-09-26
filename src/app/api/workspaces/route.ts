@@ -131,7 +131,7 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log(privateWorkspaces,collaboratingWorkspaces,sharedWorkspaces);
+    // console.log(privateWorkspaces,collaboratingWorkspaces,sharedWorkspaces);
 
     return NextResponse.json({
       privateWorkspaces: privateWorkspaces.map((wa) => wa.workspace),

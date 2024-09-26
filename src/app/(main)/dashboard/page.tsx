@@ -47,7 +47,7 @@ const DashboardPage = () => {
 
         if (userData.user.workspaces && userData.user.workspaces.length > 0) {
           const workspace = userData.user.workspaces[0]; 
-          console.log("redirecting workspaces")
+          // console.log("redirecting workspaces")
           router.push(`/dashboard/${workspace.id}`);
         }
       } catch (err) {
