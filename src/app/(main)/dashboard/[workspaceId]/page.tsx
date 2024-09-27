@@ -11,7 +11,7 @@ const Workspace_Component = ({ params }: { params: { workspaceId: string } }) =>
   const router = useRouter(); // Initialize router
 
   useEffect(() => {
-    // Ensure workspaces is defined and is an array
+    console.log(workspaces)
     if (Array.isArray(workspaces)) {
       const data = workspaces.find((workspace) => workspace.id === params.workspaceId);
       if (data) {

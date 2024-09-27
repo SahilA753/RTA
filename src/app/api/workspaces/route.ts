@@ -94,6 +94,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
+    console.log(userId,"HCERIUHFIU3RHFIUERHIUFHERIUFHERIUFHI")
+
     if (!userId) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }

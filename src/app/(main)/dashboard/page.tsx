@@ -13,7 +13,7 @@ interface UserResponse {
 }
 
 const DashboardPage = () => {
-  const { user, setUser, subscription, setSubscription, workspaces, setWorkspaces } = useContext(TotalContext);
+  const { user, setUser, subscription, setSubscription, workspaces, setWorkspaces , privateWorkspaces,setPrivateWorkspaces, sharedWorkspaces,setSharedWorkspaces, setCollaboratingWorkspaces, collaboratingWorkspaces} = useContext(TotalContext);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,14 +51,27 @@ const DashboardPage = () => {
           return; // Early return if there's an error
         }
         
-        const userWorkspaces = userData.user.workspaces || [];
-        setWorkspaces(userWorkspaces);
+                // Fetch workspaces for the current user
+        const workspacesRes = await fetch(`/api/workspaces?userId=${userData.user.id}`);
+        const { privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces } = await workspacesRes.json();
+        console.log(privateWorkspaces,collaboratingWorkspaces,sharedWorkspaces,"IWJRVIOJERIUVERIUVEIUVIUERJFI")
+        // Set individual workspace categories
+        setPrivateWorkspaces(privateWorkspaces);
+        setCollaboratingWorkspaces(collaboratingWorkspaces);
+        setSharedWorkspaces(sharedWorkspaces);
 
-        setWorkspace(userWorkspaces.length > 0 ? userWorkspaces[0] : null);
+        // Merge all workspaces into a single array and set it in the context
+        const allWorkspaces = [
+          ...privateWorkspaces,
+          ...collaboratingWorkspaces,
+          ...sharedWorkspaces,
+        ];
+        setWorkspaces(allWorkspaces);
+        setWorkspace(allWorkspaces.length > 0 ? allWorkspaces[0] : null);
         setSubscription(userData.user.subscriptions ? userData.user.subscriptions[0] : null);
 
-        if (userWorkspaces.length > 0) {
-          router.push(`/dashboard/${userWorkspaces[0].id}`);
+        if (allWorkspaces.length > 0) {
+          router.push(`/dashboard/${allWorkspaces[0].id}`);
         }
       } catch (err) {
         setError((err as Error).message || 'An unknown error occurred');
